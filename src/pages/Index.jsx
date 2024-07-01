@@ -1,13 +1,17 @@
 import React, { useState } from "react";
+import { EditorState, convertToRaw, convertFromRaw } from "draft-js";
+import { Editor } from "react-draft-wysiwyg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+
 const Index = () => {
   const [image, setImage] = useState(null);
-  const [extractedText, setExtractedText] = useState("");
-  const [correctedText, setCorrectedText] = useState("");
+  const [extractedText, setExtractedText] = useState(EditorState.createEmpty());
+  const [correctedText, setCorrectedText] = useState(EditorState.createEmpty());
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -16,19 +20,33 @@ const Index = () => {
       reader.onload = () => {
         setImage(reader.result);
         // Simulate OCR extraction
-        setExtractedText("Extracted text from the image will appear here.");
+        const contentState = convertFromRaw({
+          entityMap: {},
+          blocks: [
+            {
+              text: "Extracted text from the image will appear here.",
+              key: "initial",
+              type: "unstyled",
+              depth: 0,
+              inlineStyleRanges: [],
+              entityRanges: [],
+              data: {},
+            },
+          ],
+        });
+        setExtractedText(EditorState.createWithContent(contentState));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleTextChange = (event) => {
-    setCorrectedText(event.target.value);
-  };
+  
 
   const handleSave = () => {
     // Implement save functionality
-    console.log("Corrected Text Saved:", correctedText);
+    const rawContentState = convertToRaw(correctedText.getCurrentContent());
+    const correctedTextString = JSON.stringify(rawContentState);
+    console.log("Corrected Text Saved:", correctedTextString);
   };
 
   return (
@@ -40,18 +58,27 @@ const Index = () => {
         <CardContent className="space-y-4">
           <Input type="file" accept="image/*" onChange={handleImageUpload} />
           {image && <img src={image} alt="Uploaded" className="w-full h-auto" />}
-          <Textarea
-            value={extractedText}
-            readOnly
-            className="w-full h-32"
-            placeholder="Extracted text will appear here."
-          />
-          <Textarea
-            value={correctedText}
-            onChange={handleTextChange}
-            className="w-full h-32"
-            placeholder="Correct the extracted text here."
-          />
+          <div className="w-full h-32 border p-2">
+            <Editor
+              editorState={extractedText}
+              toolbarHidden
+              readOnly
+            />
+          </div>
+          <div className="w-full h-32 border p-2">
+            <Editor
+              editorState={correctedText}
+              onEditorStateChange={setCorrectedText}
+              toolbar={{
+                options: ['inline', 'blockType', 'fontSize', 'list', 'textAlign', 'colorPicker', 'link', 'embedded', 'emoji', 'image', 'remove', 'history'],
+                inline: { inDropdown: true },
+                list: { inDropdown: true },
+                textAlign: { inDropdown: true },
+                link: { inDropdown: true },
+                history: { inDropdown: true },
+              }}
+            />
+          </div>
           <Button onClick={handleSave}>Save Corrected Text</Button>
         </CardContent>
       </Card>
