@@ -3,11 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Tesseract from "tesseract.js";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import SpellChecker from "react-spellchecker";
+import ReactJson from "react-json-view";
 
 const Index = () => {
   const [image, setImage] = useState(null);
   const [extractedText, setExtractedText] = useState("");
   const [correctedText, setCorrectedText] = useState("");
+  const [jsonlData, setJsonlData] = useState([]);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -15,20 +23,37 @@ const Index = () => {
       const reader = new FileReader();
       reader.onload = () => {
         setImage(reader.result);
-        // Simulate OCR extraction
-        setExtractedText("Extracted text from the image will appear here.");
+        processImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleTextChange = (event) => {
-    setCorrectedText(event.target.value);
+  const processImage = (imageData) => {
+    Tesseract.recognize(imageData, "eng", {
+      logger: (m) => console.log(m),
+    })
+      .then(({ data: { text } }) => {
+        setExtractedText(text);
+        toast.success("OCR processing completed!");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error("OCR processing failed!");
+      });
+  };
+
+  const handleTextChange = (value) => {
+    setCorrectedText(value);
   };
 
   const handleSave = () => {
-    // Implement save functionality
-    console.log("Corrected Text Saved:", correctedText);
+    const newEntry = {
+      question: extractedText,
+      answer: correctedText,
+    };
+    setJsonlData([...jsonlData, newEntry]);
+    toast.success("Corrected Text Saved!");
   };
 
   return (
@@ -46,15 +71,19 @@ const Index = () => {
             className="w-full h-32"
             placeholder="Extracted text will appear here."
           />
-          <Textarea
-            value={correctedText}
-            onChange={handleTextChange}
-            className="w-full h-32"
-            placeholder="Correct the extracted text here."
-          />
+          <SpellChecker>
+            <ReactQuill
+              value={correctedText}
+              onChange={handleTextChange}
+              className="w-full h-32"
+              placeholder="Correct the extracted text here."
+            />
+          </SpellChecker>
           <Button onClick={handleSave}>Save Corrected Text</Button>
+          <ReactJson src={jsonlData} />
         </CardContent>
       </Card>
+      <ToastContainer />
     </div>
   );
 };
