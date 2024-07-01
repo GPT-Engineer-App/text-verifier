@@ -1,15 +1,60 @@
-// Update this page (the content is just a fallback if you fail and example)
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Index = () => {
+  const [image, setImage] = useState(null);
+  const [extractedText, setExtractedText] = useState("");
+  const [correctedText, setCorrectedText] = useState("");
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImage(reader.result);
+        // Simulate OCR extraction
+        setExtractedText("Extracted text from the image will appear here.");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleTextChange = (event) => {
+    setCorrectedText(event.target.value);
+  };
+
+  const handleSave = () => {
+    // Implement save functionality
+    console.log("Corrected Text Saved:", correctedText);
+  };
+
   return (
-    <div className="h-screen w-screen flex items-center justify-center">
-      {/* Update with components here - default to put new layout sections as separate components in the components folder, and import them here */}
-      <div>
-        <h1 className="text-3xl text-center">Your Blank Canvas</h1>
-        <p className="text-center">
-          Chat with the agent to start making edits.
-        </p>
-      </div>
+    <div className="h-screen w-screen flex flex-col items-center justify-center space-y-4 p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader>
+          <CardTitle>OCR Verification</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input type="file" accept="image/*" onChange={handleImageUpload} />
+          {image && <img src={image} alt="Uploaded" className="w-full h-auto" />}
+          <Textarea
+            value={extractedText}
+            readOnly
+            className="w-full h-32"
+            placeholder="Extracted text will appear here."
+          />
+          <Textarea
+            value={correctedText}
+            onChange={handleTextChange}
+            className="w-full h-32"
+            placeholder="Correct the extracted text here."
+          />
+          <Button onClick={handleSave}>Save Corrected Text</Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
