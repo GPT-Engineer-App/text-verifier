@@ -60,7 +60,7 @@ const Index = () => {
     <div className="h-screen w-screen flex flex-col items-center justify-center space-y-4 p-4">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>OCR Verification</CardTitle>
+          <CardTitle>OCR Text Verification</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input type="file" accept="image/*" onChange={handleImageUpload} />
